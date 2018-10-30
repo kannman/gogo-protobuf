@@ -80,6 +80,9 @@ type Marshaler struct {
 	// fully-qualified type name from the type URL and pass that to
 	// proto.MessageType(string).
 	AnyResolver AnyResolver
+
+	// Whether to render rpc status field. Only field with tag=1 can be omitted.
+	OmitRpcStatus bool
 }
 
 // AnyResolver takes a type URL, present in an Any message, and resolves it into
@@ -325,6 +328,11 @@ func (m *Marshaler) marshalObject(out *errWriter, v proto.Message, indent, typeU
 			valueField = sv.Type().Field(0)
 		}
 		prop := jsonProperties(valueField, m.OrigName)
+
+		if m.OmitRpcStatus && prop.Tag == 1 && prop.OrigName == "status" {
+			continue
+		}
+
 		if !firstField {
 			m.writeSep(out)
 		}
